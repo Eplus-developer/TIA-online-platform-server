@@ -51,6 +51,7 @@ public class MyRealm extends AuthorizingRealm {
 
     /**
      * 认证
+     *
      * @param authenticationToken
      * @return
      * @throws AuthenticationException
@@ -60,11 +61,17 @@ public class MyRealm extends AuthorizingRealm {
         UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
 
         //数据库匹配，认证
-        String username = token.getUsername(); //student id for web
-        String password = new String(token.getPassword());
+        String username = token.getUsername(); //web端用学号，小程序端用openid
+        User user;
+        if (username.length() <= 11) { //学号长度为11位，学号密码登录不会超过11位。
+            String password = new String(token.getPassword());
 
-        User user = userRepository.findByStuNumber(username);
-        if(user == null || !(user.getPassword()+"").equals(password))throw new AuthenticationException();
+            user = userRepository.findByStuNumber(username);
+            if (user == null || !(user.getPassword() + "").equals(password)) throw new AuthenticationException();
+        } else { //超过11位说明用的是
+            user = userRepository.findByOpenId(username);
+        }
+
 
         // 处理登录信息
         UserDto userDTO = new UserDto();
@@ -82,5 +89,6 @@ public class MyRealm extends AuthorizingRealm {
 
         SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(userDTO, token.getCredentials(), getName());
         return info;
+
     }
 }

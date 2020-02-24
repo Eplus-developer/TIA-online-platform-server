@@ -197,6 +197,9 @@ public class User {
     
     public User(String openid) {
         this.openId = openid;
+        this.name = openid;
+
+        this.password =  "123456";
     }
 
 

@@ -41,8 +41,13 @@ public class LoginController {
     public Result wxLogin(@RequestParam(name = "code") String code) {
 
         String openid = loginService.getWxSession(code);
+
+        UsernamePasswordToken token = new UsernamePasswordToken();
+        token.setUsername(openid);
+        token.setPassword("123456".toCharArray());
+
+        SecurityUtils.getSubject().login(token);
+
         return ResultUtil.success(openid);
     }
-
-
 }
