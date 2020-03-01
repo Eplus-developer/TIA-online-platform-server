@@ -39,5 +39,8 @@ public interface ActivityService {
 
     void unBindTagToActivity(Integer activityId, Integer tagId);
     Activity findActivity(Integer activityId);
+    List<ActivityDto> findPaginationActivityWithCriteria(Integer pageNum, Integer pageSize,
+                                                         String activityName,String type,boolean isCompetition);
+
     boolean enroll(Integer userId, Integer activityId) throws WrongUsageException;
 }

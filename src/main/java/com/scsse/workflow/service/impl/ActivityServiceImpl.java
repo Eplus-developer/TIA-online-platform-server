@@ -14,15 +14,24 @@ import com.scsse.workflow.repository.UserRepository;
 import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.util.dao.DtoTransferHelper;
 import com.scsse.workflow.util.dao.UserUtil;
+import com.scsse.workflow.util.result.ResultUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.*;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -163,6 +172,69 @@ public class ActivityServiceImpl implements ActivityService {
         );
     }
 
+    @Override
+    public List<ActivityDto> findPaginationActivityWithCriteria(Integer pageNum, Integer pageSize,
+                                                         String activityName,String type,boolean isCompetition){
+        Pageable pageable = new PageRequest(pageNum, pageSize, Sort.Direction.DESC, "publishTime");
+        List<ActivityDto> result = new ArrayList<>();
+        Page<Activity> page = activityRepository.findAll(new Specification<Activity>() {
+
+            public Predicate toPredicate(Root<Activity> root,
+                                         CriteriaQuery<?> query, CriteriaBuilder cb) {
+                Path<String> activityNamePath = root.get("name");
+                /**
+                 * 连接查询条件, 不定参数，可以连接0..N个查询条件
+                 */
+                Predicate condition1 = null;
+                if(activityName==null||activityName.trim()==""){
+                    condition1=cb.like(activityNamePath, "%%");
+                }else{
+                    condition1=cb.like(activityNamePath, "%"+activityName+"%");
+                }
+                Path<Timestamp> endTimePath = root.get("endTime");
+                Path<Timestamp> actTimePath = root.get("actTime");
+                Path<String> activityTypePath = root.get("activityType");
+                Predicate condition2 = null;
+                Predicate condition3 = null;
+                Predicate condition4 = null;
+                LocalDateTime currentTime = LocalDateTime.now();
+                switch (type) {
+                    case "fresh":
+                        condition2=cb.greaterThan(endTimePath, Timestamp.valueOf(currentTime));
+                        break;
+                    case "expire":
+                        condition2=cb.lessThanOrEqualTo(endTimePath, Timestamp.valueOf(currentTime));
+                        condition3=cb.greaterThan(actTimePath, Timestamp.valueOf(currentTime));
+                        break;
+                    case "finish":
+                        condition2=cb.lessThanOrEqualTo(actTimePath, Timestamp.valueOf(currentTime));
+                        break;
+                    default:
+                }
+                if(isCompetition){
+                    condition4=cb.equal(activityTypePath, "competition");
+                }else{
+                    condition4=cb.like(activityTypePath, "%%");
+                }
+                if(condition2==null)
+                query.where(condition1,condition4);
+                else if(condition3==null){
+                    query.where(condition1,condition2,condition4);
+                }else
+                    query.where(condition1,condition2,condition3,condition4);
+
+                return null;
+            }
+
+        },pageable);
+        List<Activity> list = page.getContent();
+        User currentUser = userUtil.getLoginUser();
+
+        for(Activity ans:list){
+            result.add(dtoTransferHelper.transferToActivityDto(ans,currentUser));
+        }
+        return result;
+    }
     @Override
     public boolean enroll(Integer userId, Integer activityId) throws WrongUsageException {
         Activity activity = findActivity(activityId);

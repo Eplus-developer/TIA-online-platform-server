@@ -13,6 +13,7 @@ import com.scsse.workflow.util.container.Pair;
 import com.scsse.workflow.util.dao.UserUtil;
 import com.scsse.workflow.util.mvc.QueryParameterBuilder;
 import com.scsse.workflow.util.result.Result;
+import com.scsse.workflow.util.result.ResultCode;
 import com.scsse.workflow.util.result.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -69,7 +70,7 @@ public class RecruitController {
                                  @RequestParam(required = false, defaultValue = "0") Integer pageNum,
                                  @RequestParam(required = false, defaultValue = "10") Integer pageSize,
                                  @RequestParam(required = false) String currentTime) {
-        if(currentTime==null||currentTime==""){
+        if (currentTime == null || currentTime == "") {
             DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             LocalDateTime time = LocalDateTime.now();
             currentTime = df.format(time);
@@ -83,7 +84,7 @@ public class RecruitController {
 //        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, requestParam));
 
 
-        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, recruitName,recruitPosition,currentTime));
+        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, recruitName, recruitPosition, currentTime));
 
     }
 
@@ -167,7 +168,7 @@ public class RecruitController {
      */
     @GetMapping("/recruit/appliedRecruit")
     public Result getAppliedRecruit() throws WrongUsageException {
-        Integer uid =  userUtil.getLoginUserId();
+        Integer uid = userUtil.getLoginUserId();
         List list = userService.findAllRegisteredRecruit(uid);
         return ResultUtil.success(list);
 //        return ResultUtil.success(
@@ -205,9 +206,13 @@ public class RecruitController {
     @PostMapping("/recruit/{activityId}")
     public Result createOneRecruit(@RequestBody Recruit recruit, @PathVariable Integer activityId,
                                    @RequestParam(value = "teamId", required = true) Integer teamId) {
+        Activity activity = activityService.findActivityById(activityId);
+        if (activity.getQuantityType()) {//单人
+            return ResultUtil.error(ResultCode.CODE_500);
+        }
         recruit.setCreator(userUtil.getLoginUser());
         recruit.setRecruitState(recruitService.going);
-        recruit.setActivity(activityService.findActivityById(activityId));
+        recruit.setActivity(activity);
         recruit.setCreateTime(new Date());
         recruit.setTeam(teamService.findTeam(teamId));
         recruit.setRecruitRegisteredNumber(0);
@@ -229,16 +234,17 @@ public class RecruitController {
 
     /**
      * 通过招聘
-     * @param userId 用户Id
+     *
+     * @param userId    用户Id
      * @param recruitId 招聘Id
      * @return 200OK
      * @throws WrongUsageException USER_NOT_FOUND
      */
     @PutMapping("/recruit/{recruitId}/user/{userId}")
     public Result applyUser(@PathVariable Integer userId, @PathVariable Integer recruitId) throws WrongUsageException {
-        recruitService.addMember(userId,recruitId);
+        recruitService.addMember(userId, recruitId);
         Recruit recruit = recruitService.findRecruit(recruitId);
-        if(recruit.getRecruitRegisteredNumber()==recruit.getRecruitWillingNumber()){
+        if (recruit.getRecruitRegisteredNumber() == recruit.getRecruitWillingNumber()) {
             recruitService.finishRecruit(recruitId);
         }
         return ResultUtil.success();
@@ -246,19 +252,21 @@ public class RecruitController {
 
     /**
      * 移除通过操作
-     * @param userId 用户Id
+     *
+     * @param userId    用户Id
      * @param recruitId 招聘Id
      * @return 200OK
      * @throws WrongUsageException USER_NOT_FOUND
      */
     @DeleteMapping("/recruit/{recruitId}/user/{userId}")
     public Result removeUser(@PathVariable Integer userId, @PathVariable Integer recruitId) throws WrongUsageException {
-        recruitService.removeMember(userId,recruitId);
+        recruitService.removeMember(userId, recruitId);
         return ResultUtil.success();
     }
 
     /**
      * 用户申请招聘
+     *
      * @param userId    用户Id
      * @param recruitId 招聘Id
      * @return 200 OK
@@ -266,31 +274,25 @@ public class RecruitController {
      */
     @PutMapping("/recruit/{recruitId}/appliedUser/{userId}")
     public Result applyRecruit(@PathVariable Integer userId, @PathVariable Integer recruitId)
-        throws WrongUsageException {
+            throws WrongUsageException {
         recruitService.applyOneRecruit(userId, recruitId);
         return ResultUtil.success();
     }
 
     /**
      * 用户取消申请招聘
-     * @param userId 用户Id
+     *
+     * @param userId    用户Id
      * @param recruitId 招聘Id
      * @return 200 OK
      * @throws WrongUsageException USER_NOT_FOUND
      */
     @DeleteMapping("/recruit/{recruitId}/appliedUser/{userId}")
     public Result cancelAppliedRecruit(@PathVariable Integer userId, @PathVariable Integer recruitId)
-        throws WrongUsageException {
+            throws WrongUsageException {
         recruitService.cancelAppliedRecruit(userId, recruitId);
         return ResultUtil.success();
     }
-
-
-
-
-
-
-
 
 
 }

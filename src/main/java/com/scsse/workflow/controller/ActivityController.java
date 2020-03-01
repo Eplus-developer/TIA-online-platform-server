@@ -40,17 +40,26 @@ public class ActivityController {
      * @return List{ActivityDto}
      */
     @GetMapping("/activity/all")
-    public Result findAllActivity(@RequestParam(name = "type", required = false, defaultValue = "normal") String type) {
-        switch (type) {
-            case "fresh":
-                return ResultUtil.success(activityService.findAllFreshActivity("activity"));
-            case "expire":
-                return ResultUtil.success(activityService.findAllExpiredActivity("activity"));
-            case "finish":
-                return ResultUtil.success(activityService.findAllFinishedActivity("activity"));
-            default:
-                return ResultUtil.success(activityService.findAllActivity("activity"));
-        }
+    public Result findAllActivity(
+            @RequestParam(required = false) String activityName,
+            @RequestParam(required = false, defaultValue = "0") Integer pageNum,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "type", required = false, defaultValue = "normal") String type) {
+//        switch (type) {
+//            case "fresh":
+//                return ResultUtil.success(activityService.findAllFreshActivity("activity"));
+//        break;
+//            case "expire":
+//                return ResultUtil.success(activityService.findAllExpiredActivity("activity"));
+//        break;
+//            case "finish":
+//                return ResultUtil.success(activityService.findAllFinishedActivity("activity"));
+//        break;
+//            default:
+//                return ResultUtil.success(activityService.findAllActivity("activity"));
+//        }
+        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, activityName, type,false));
+
 
     }
 
@@ -58,17 +67,13 @@ public class ActivityController {
      * 获取所有比赛
      */
     @GetMapping("/activity/all/competition")
-    public Result findAllCompetition(@RequestParam(name = "type", required = false, defaultValue = "normal") String type) {
-        switch (type) {
-            case "fresh":
-                return ResultUtil.success(activityService.findAllFreshActivity("competition"));
-            case "expire":
-                return ResultUtil.success(activityService.findAllExpiredActivity("competition"));
-            case "finish":
-                return ResultUtil.success(activityService.findAllFinishedActivity("competition"));
-            default:
-                return ResultUtil.success(activityService.findAllActivity("competition"));
-        }
+    public Result findAllCompetition(
+            @RequestParam(required = false) String activityName,
+            @RequestParam(required = false, defaultValue = "0") Integer pageNum,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "type", required = false, defaultValue = "normal") String type) {
+        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, activityName, type,true));
+
     }
 
 
@@ -111,7 +116,8 @@ public class ActivityController {
     @PostMapping("/activity")
     public Result createOneActivity(@RequestBody Activity activity) {
         activity.setPromoter(userUtil.getLoginUser());
-//        activity.setQuantityType(true);
+        if (activity.getActivityType().equals("competition"))
+            activity.setQuantityType(true);
         activity.setPublishTime(new Date());
         return ResultUtil.success(activityService.createActivity(activity));
     }

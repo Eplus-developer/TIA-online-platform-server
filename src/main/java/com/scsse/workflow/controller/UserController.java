@@ -94,6 +94,16 @@ public class UserController {
     }
 
     /**
+     * 修改密码
+     */
+    @PutMapping("/user/password")
+    public Result updatePassword(@RequestBody User user) throws WrongUsageException {
+        user.setId(userUtil.getLoginUserId());
+        userService.updateUser(user);
+        return ResultUtil.success(
+        );
+    }
+    /**
      * 编辑自己的个人信息
      *
      * @param user 需要更新的User信息
