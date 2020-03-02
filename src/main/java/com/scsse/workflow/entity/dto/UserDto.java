@@ -20,6 +20,8 @@ public class UserDto {
 
     private String userNumber;
 
+    private String userFaceImage;
+
     private String userGrade;
 
     private String userPhone;

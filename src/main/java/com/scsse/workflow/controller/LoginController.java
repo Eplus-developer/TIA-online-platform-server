@@ -1,6 +1,7 @@
 package com.scsse.workflow.controller;
 
 import com.scsse.workflow.service.LoginService;
+import com.scsse.workflow.service.UserService;
 import com.scsse.workflow.util.result.Result;
 import com.scsse.workflow.util.result.ResultUtil;
 import org.apache.shiro.SecurityUtils;
@@ -21,20 +22,26 @@ public class LoginController {
 
     private final LoginService loginService;
 
+    private final UserService userService;
+
     @Autowired
-    public LoginController(LoginService loginService) {
+    public LoginController(LoginService loginService, UserService userService) {
         this.loginService = loginService;
+        this.userService = userService;
     }
 
     @PostMapping("/webLogin")
-    public String webLogin(@RequestParam("stuId")String stuId,
+    public Result webLogin(@RequestParam("stuId")String stuId,
                           @RequestParam("password")String password) {
         UsernamePasswordToken token = new UsernamePasswordToken();
         token.setUsername(stuId);
         token.setPassword(password.toCharArray());
 
         SecurityUtils.getSubject().login(token);
-        return token.toString();
+
+        return ResultUtil.success(
+                userService.findUserByStuNumber(stuId)
+        );
     }
 
     @GetMapping("/wxLogin")
@@ -50,4 +57,6 @@ public class LoginController {
 
         return ResultUtil.success(openid);
     }
+
+
 }
