@@ -116,7 +116,7 @@ public class ActivityController {
     @PostMapping("/activity")
     public Result createOneActivity(@RequestBody Activity activity) {
         activity.setPromoter(userUtil.getLoginUser());
-        if (activity.getActivityType().equals("competition"))
+        if (activity.getActivityType().equals("course"))
             activity.setQuantityType(true);
         activity.setPublishTime(new Date());
         return ResultUtil.success(activityService.createActivity(activity));

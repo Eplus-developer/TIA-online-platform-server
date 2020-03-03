@@ -4,6 +4,7 @@ import com.scsse.workflow.constant.PredicateType;
 import com.scsse.workflow.entity.dto.RecruitDto;
 import com.scsse.workflow.entity.model.Activity;
 import com.scsse.workflow.entity.model.Recruit;
+import com.scsse.workflow.entity.model.User;
 import com.scsse.workflow.handler.WrongUsageException;
 import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.service.RecruitService;
@@ -84,7 +85,7 @@ public class RecruitController {
 //        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, requestParam));
 
 
-        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, recruitName, recruitPosition, currentTime));
+        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, null,recruitName, recruitPosition, currentTime));
 
     }
 
@@ -102,6 +103,21 @@ public class RecruitController {
     public Result getRecruitDetail(@PathVariable() Integer recruitId) {
         return ResultUtil.success(recruitService.findRecruitById(recruitId));
     }
+
+    /**
+     * 获取我发布的所有招聘
+     *
+     * @return RecruitDto
+     */
+    @GetMapping("/recruit/all/publish")
+    public Result getMyPublishedRecruits(@RequestParam(required = false, defaultValue = "0") Integer pageNum,
+                                         @RequestParam(required = false, defaultValue = "10") Integer pageSize
+                                     ) throws WrongUsageException {
+        Integer userId = userUtil.getLoginUserId();
+        return ResultUtil.success(
+                recruitService.findPaginationRecruitWithCriteria(pageNum,pageSize,userId,null,null,null));
+    }
+
 
     /**
      * 获取申请loginUser管理招聘的所有用户
@@ -207,7 +223,7 @@ public class RecruitController {
     public Result createOneRecruit(@RequestBody Recruit recruit, @PathVariable Integer activityId,
                                    @RequestParam(value = "teamId", required = true) Integer teamId) {
         Activity activity = activityService.findActivityById(activityId);
-        if (activity.getQuantityType()) {//单人
+        if (!activity.getQuantityType()) {//单人
             return ResultUtil.error(ResultCode.CODE_500);
         }
         recruit.setCreator(userUtil.getLoginUser());

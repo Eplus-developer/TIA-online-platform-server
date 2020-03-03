@@ -31,10 +31,7 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.*;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Alfred Fu
@@ -83,48 +80,67 @@ public class RecruitServiceImpl implements RecruitService {
 
     @Override
     public List<RecruitDto> findPaginationRecruitWithCriteria(
-            Integer pageNum, Integer pageSize,
-            String recruitName,String recruitPosition,String currentTime) {
+            Integer pageNum, Integer pageSize, Integer creatorId,
+            String recruitName, String recruitPosition, String currentTime) {
         Pageable pageable = new PageRequest(pageNum, pageSize, Sort.Direction.DESC, "createTime");
         List<RecruitDto> result = new ArrayList<>();
-        Page<Recruit> page = recruitRepository.findAll(new Specification<Recruit> () {
+        Page<Recruit> page = recruitRepository.findAll(new Specification<Recruit>() {
 
             public Predicate toPredicate(Root<Recruit> root,
                                          CriteriaQuery<?> query, CriteriaBuilder cb) {
                 Path<String> recruitNamePath = root.get("recruitName");
                 Path<String> recruitPositionPath = root.get("recruitPosition");
+                Path<User> creatorIdPath = root.get("creator");
                 Path<Timestamp> currentTimePath = root.get("createTime");
                 /**
                  * 连接查询条件, 不定参数，可以连接0..N个查询条件
                  */
                 Predicate condition1 = null;
-                if(recruitName==null||recruitName.trim()==""){
-                    condition1=cb.like(recruitNamePath, "%%");
-                }else{
-                    condition1=cb.like(recruitNamePath, "%"+recruitName+"%");
+                if (recruitName == null || recruitName.trim() == "") {
+                    condition1 = cb.like(recruitNamePath, "%%");
+                } else {
+                    condition1 = cb.like(recruitNamePath, "%" + recruitName + "%");
                 }
                 Predicate condition2 = null;
-                if(recruitPosition==null||recruitPosition.trim()==""){
-                    condition2=cb.like(recruitPositionPath, "%%");
-                }else{
-                    condition2=cb.like(recruitPositionPath, "%"+recruitPosition+"%");
+                if (recruitPosition == null || recruitPosition.trim() == "") {
+                    condition2 = cb.like(recruitPositionPath, "%%");
+                } else {
+                    condition2 = cb.like(recruitPositionPath, "%" + recruitPosition + "%");
                 }
-                query.where(condition1,condition2,
-                        cb.lessThanOrEqualTo(currentTimePath,Timestamp.valueOf(currentTime))); //这里可以设置任意条查询条件
+                Predicate condition3 = null;
+                if (creatorId != null) {
+                    condition3 = cb.equal(creatorIdPath, userRepository.getOne(creatorId));
+                }else{
+                    condition3 = cb.isNotNull(creatorIdPath);
+                }
+                Predicate condition4 = null;
+                if (currentTime != null) {
+                    condition4 = cb.lessThanOrEqualTo(currentTimePath, Timestamp.valueOf(currentTime));
+                }else{
+                    condition4 = cb.isNotNull(currentTimePath);
+                }
+                query.where(condition1, condition2,condition3,condition4);
 
+//                if (condition3 == null)
+//                    query.where(condition1, condition2,
+//                            cb.lessThanOrEqualTo(currentTimePath, Timestamp.valueOf(currentTime))); //这里可以设置任意条查询条件
+//                else
+//                    query.where(condition1, condition2, condition3,
+//                            cb.lessThanOrEqualTo(currentTimePath, Timestamp.valueOf(currentTime)));
                 return null;
             }
 
-        },pageable);
+        }, pageable);
         List<Recruit> list = page.getContent();
-                User currentUser = userUtil.getLoginUser();
+        User currentUser = userUtil.getLoginUser();
 
-        for(Recruit ans:list){
-            result.add(dtoTransferHelper.transferToRecruitDto(ans,currentUser));
+        for (Recruit ans : list) {
+            result.add(dtoTransferHelper.transferToRecruitDto(ans, currentUser));
         }
         return result;
     }
-//    @Override
+
+    //    @Override
 //    public List<RecruitDto> findPaginationRecruitWithCriteria(
 //            Integer pageNum, Integer pageSize,
 //            HashMap<Integer, Pair<String, String>> queryParam) {
