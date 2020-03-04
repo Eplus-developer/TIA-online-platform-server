@@ -83,6 +83,12 @@ public class Activity {
     @Column(name = "quantity_type")
     private Boolean quantityType;
 
+    /**
+     * 图片url
+     */
+    @Column
+    private String image;
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JsonBackReference(value = "activity.activityTags")
     @JoinTable(name = "activity_tag",
