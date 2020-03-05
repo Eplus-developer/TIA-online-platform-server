@@ -8,6 +8,7 @@ import com.scsse.workflow.entity.model.User;
 import com.scsse.workflow.handler.WrongUsageException;
 import com.scsse.workflow.repository.CourseRepository;
 import com.scsse.workflow.repository.TeamRepository;
+import com.scsse.workflow.repository.UserRepository;
 import com.scsse.workflow.service.CourseService;
 import com.scsse.workflow.util.dao.DtoTransferHelper;
 import com.scsse.workflow.util.dao.UserUtil;
@@ -23,7 +24,10 @@ import java.util.List;
 @Transactional
 public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
+
     private final TeamRepository teamRepository;
+
+    private final UserRepository userRepository;
 
     private final DtoTransferHelper dtoTransferHelper;
 
@@ -32,12 +36,13 @@ public class CourseServiceImpl implements CourseService {
     private final ModelMapper modelMapper;
     @Autowired
     public CourseServiceImpl(CourseRepository courseRepository, DtoTransferHelper dtoTransferHelper,
-                             UserUtil userUtil, ModelMapper modelMapper,TeamRepository teamRepository) {
+                             UserUtil userUtil, ModelMapper modelMapper,TeamRepository teamRepository, UserRepository userRepository) {
         this.courseRepository = courseRepository;
+        this.teamRepository = teamRepository;
+        this.userRepository = userRepository;
         this.dtoTransferHelper = dtoTransferHelper;
         this.userUtil = userUtil;
         this.modelMapper = modelMapper;
-        this.teamRepository = teamRepository;
     }
     @Override
     public CourseDto getCourse(Integer courseId) {
@@ -89,5 +94,17 @@ public class CourseServiceImpl implements CourseService {
             );
         } else
             return new ArrayList<>();
+    }
+
+    @Override
+    public boolean enroll(Integer userId, Integer courseId) throws WrongUsageException {
+        Course course = courseRepository.findOne(courseId);
+        User user = userUtil.getUserByUserId(userId);
+        if(course!=null) {
+            user.getJoinCourses().add(course);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
     }
 }

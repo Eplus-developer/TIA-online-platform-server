@@ -316,7 +316,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<CourseDto> findJoinedCourse(User user) {
-//        return null;
         return dtoTransferHelper.transferToListDto(
                 courseRepository.findAllByStudentsContains(user),
                 eachItem -> dtoTransferHelper.transferToCourseDto((Course) eachItem)
@@ -324,16 +323,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<TeamDto> findCreatedTeam(User user) {
+    public List<TeamDto> findCreatedTeam(Integer userId) {
         return dtoTransferHelper.transferToListDto(
-                teamRepository.findAllByLeader_Id(user.getId())
+                teamRepository.findAllByLeader_Id(userId)
         );
     }
 
     @Override
-    public List<TeamDto> findCreatedCourse(User user) {
+    public List<CourseDto> findCreatedCourse(Integer userId) {
         return dtoTransferHelper.transferToListDto(
-                courseRepository.findAllByLecturer_Id(user.getId())
+                courseRepository.findAllByLecturer_Id(userId)
         );
     }
 
@@ -375,6 +374,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }
     }
+
 
     @Transactional(propagation = Propagation.SUPPORTS)
     public User getOne(Integer id) {

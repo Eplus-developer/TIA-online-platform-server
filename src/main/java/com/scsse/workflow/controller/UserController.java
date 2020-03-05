@@ -313,4 +313,21 @@ public class UserController {
         userService.unfollowCourse(userUtil.getLoginUserId(), courseId);
         return ResultUtil.success();
     }
+
+    /**
+     * 获取用户发布的所有课程
+     *
+     * @param userId 调用者的openid
+     * @return List{CourseDto}
+     * <p>
+     * e.g.
+     * GET /user/createdCourse
+     */
+    @GetMapping("/user/{userId}/createdCourse")
+    public Result getPostCourse(@PathVariable Integer userId) {
+        return ResultUtil.success(
+                userService.findCreatedCourse(userId)
+        );
+    }
+
 }

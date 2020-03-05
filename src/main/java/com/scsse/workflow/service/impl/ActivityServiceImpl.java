@@ -14,7 +14,6 @@ import com.scsse.workflow.repository.UserRepository;
 import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.util.dao.DtoTransferHelper;
 import com.scsse.workflow.util.dao.UserUtil;
-import com.scsse.workflow.util.result.ResultUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,7 +30,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +50,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
 
     private final RecruitRepository recruitRepository;
+
     private final UserRepository userRepository;
 
     private final TagRepository tagRepository;
@@ -235,6 +234,7 @@ public class ActivityServiceImpl implements ActivityService {
         }
         return result;
     }
+
     @Override
     public boolean enroll(Integer userId, Integer activityId) throws WrongUsageException {
         Activity activity = findActivity(activityId);
@@ -246,6 +246,7 @@ public class ActivityServiceImpl implements ActivityService {
         }
         return false;
     }
+
     @Override
     public Set<Tag> findAllTagOfActivity(Integer activityId) {
         Activity activity = activityRepository.findOne(activityId);

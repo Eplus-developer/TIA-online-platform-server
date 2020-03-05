@@ -138,9 +138,9 @@ public interface UserService {
 
     List<TeamDto> findJoinedTeam(User user);
 
-    List<TeamDto> findCreatedTeam(User user);
+    List<TeamDto> findCreatedTeam(Integer userId);
 
-    public List<TeamDto> findCreatedCourse(User user);
+    List<CourseDto> findCreatedCourse(Integer userId);
 
     List<CourseDto> findJoinedCourse(User user);
 
