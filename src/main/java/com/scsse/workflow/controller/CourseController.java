@@ -1,6 +1,7 @@
 package com.scsse.workflow.controller;
 
 import com.scsse.workflow.entity.model.Course;
+import com.scsse.workflow.handler.WrongUsageException;
 import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.service.CourseService;
 import com.scsse.workflow.service.UserService;
@@ -19,6 +20,7 @@ public class CourseController {
     private final CourseService courseService;
 
     private final UserService userService;
+
     private final ActivityService activityService;
 
     @Autowired
@@ -67,6 +69,12 @@ public class CourseController {
         );
     }
 
+    /**
+     * 获取一个课程
+     *
+     *
+     * @return CourseDto
+     */
     @GetMapping("/course/{courseId}")
     public Result getCourse(@PathVariable Integer courseId) {
         return ResultUtil.success(
@@ -74,14 +82,26 @@ public class CourseController {
         );
     }
 
+    /**
+     * 更新一个课程
+     *
+     *
+     * @return CourseDto
+     */
     @RequiresRoles("admin")
     @PutMapping("/course/{courseId}")
-    public Result updateCourse(@PathVariable Integer CourseId, @RequestBody Course course) throws Exception {
+    public Result updateCourse(@PathVariable Integer courseId, @RequestBody Course course) throws Exception {
         return ResultUtil.success(
                 courseService.updateCourse(course)
         );
     }
 
+    /**
+     * 发布一个课程
+     *
+     *
+     * @return CourseDto
+     */
     @RequiresRoles("admin")
     @PostMapping("/course/{activityId}")
     public Result createCourse(@RequestBody Course course,@PathVariable Integer activityId) {
@@ -91,10 +111,31 @@ public class CourseController {
         );
     }
 
+    /**
+     * 删除一个课程
+     *
+     *
+     * @return CourseDto
+     */
     @RequiresRoles("admin")
     @DeleteMapping("/course/{courseId}")
     public Result deleteCourse(@PathVariable Integer courseId) {
         courseService.deleteCourse(courseId);
         return ResultUtil.success();
     }
+
+    /**
+     * 报名一个课程
+     *
+     *
+     * @return CourseDto
+     */
+    @PutMapping("/course/{courseId}/enroll")
+    public Result enroll(@PathVariable Integer courseId) throws WrongUsageException {
+        Integer userId = userUtil.getLoginUserId();
+        courseService.enroll(userId, courseId);
+        return ResultUtil.success();
+    }
+
+
 }
