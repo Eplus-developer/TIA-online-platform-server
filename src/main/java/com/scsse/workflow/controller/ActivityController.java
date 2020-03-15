@@ -41,6 +41,7 @@ public class ActivityController {
      */
     @GetMapping("/activity/all")
     public Result findAllActivity(
+            @RequestParam(required = false,defaultValue = "all") String activityType,
             @RequestParam(required = false) String activityName,
             @RequestParam(required = false, defaultValue = "0") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
@@ -58,7 +59,7 @@ public class ActivityController {
 //            default:
 //                return ResultUtil.success(activityService.findAllActivity("activity"));
 //        }
-        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, activityName, type,false));
+        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, activityType,activityName, type));
 
 
     }
@@ -72,7 +73,7 @@ public class ActivityController {
             @RequestParam(required = false, defaultValue = "0") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(name = "type", required = false, defaultValue = "normal") String type) {
-        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, activityName, type,true));
+        return ResultUtil.success(activityService.findPaginationActivityWithCriteria(pageNum, pageSize, ActivityService.COMPETITION,activityName, type));
 
     }
 
@@ -116,7 +117,8 @@ public class ActivityController {
     @PostMapping("/activity")
     public Result createOneActivity(@RequestBody Activity activity) {
         activity.setPromoter(userUtil.getLoginUser());
-        if (activity.getActivityType().equals("course"))
+        String type = activity.getActivityType();
+        if (type.equals("course")||type.equals("lab"))
             activity.setQuantityType(true);
         activity.setPublishTime(new Date());
         return ResultUtil.success(activityService.createActivity(activity));

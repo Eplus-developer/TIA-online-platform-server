@@ -14,7 +14,9 @@ import java.util.Set;
  * Created on 2019-02-19 20:14
  */
 public interface ActivityService {
-
+     final String COURSE = "course";
+     final String COMPETITION = "competition";
+     final String LAB = "lab";
     List<ActivityDto> findAllActivity(String type);
 
     List<ActivityDto> findAllExpiredActivity(String type);
@@ -24,7 +26,6 @@ public interface ActivityService {
     List<ActivityDto> findAllFreshActivity(String type);
 
     ActivityDto findActivityById(Integer activityId);
-
     Activity createActivity(Activity activity);
 
     Activity updateActivity(Activity activity);
@@ -41,7 +42,7 @@ public interface ActivityService {
 
     Activity findActivity(Integer activityId);
 
-    List<ActivityDto> findPaginationActivityWithCriteria(Integer pageNum, Integer pageSize, String activityName,String type,boolean isCompetition);
+    List<ActivityDto> findPaginationActivityWithCriteria(Integer pageNum, Integer pageSize, String activityType,String activityName,String type);
 
     boolean enroll(Integer userId, Integer activityId) throws WrongUsageException;
 }

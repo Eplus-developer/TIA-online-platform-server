@@ -56,7 +56,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final TagRepository tagRepository;
 
     @Autowired
-    public ActivityServiceImpl(ModelMapper modelMapper, UserUtil userUtil,UserRepository userRepository, DtoTransferHelper dtoTransferHelper, ActivityRepository activityRepository, RecruitRepository recruitRepository, TagRepository tagRepository) {
+    public ActivityServiceImpl(ModelMapper modelMapper, UserUtil userUtil, UserRepository userRepository, DtoTransferHelper dtoTransferHelper, ActivityRepository activityRepository, RecruitRepository recruitRepository, TagRepository tagRepository) {
         this.modelMapper = modelMapper;
         this.userUtil = userUtil;
         this.userRepository = userRepository;
@@ -69,24 +69,26 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public List<ActivityDto> findAllActivity(String type) {
         List<Activity> list = new ArrayList<>();
-        if(type.equals("competition")){
+        if (type.equals("competition")) {
             list = activityRepository.findByActivityType("competition");
-        }else{
+        } else {
             list = activityRepository.findAll();
         }
-        return dtoTransferHelper.transferToListDto(list, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem,userUtil.getLoginUser()));
+        return dtoTransferHelper.transferToListDto(list, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem, userUtil.getLoginUser()));
     }
+
     @Override
     public Activity findActivity(Integer activityId) {
         return activityRepository.findOne(activityId);
     }
+
     @Override
     public List<ActivityDto> findAllExpiredActivity(String type) {
         List<Activity> activities = new ArrayList<>();
         List<Activity> list = new ArrayList<>();
-        if(type.equals("competition")){
+        if (type.equals("competition")) {
             list = activityRepository.findByActivityType("competition");
-        }else{
+        } else {
             list = activityRepository.findAll();
         }
         list.stream()
@@ -99,16 +101,16 @@ public class ActivityServiceImpl implements ActivityService {
                         (activity.getActTime().toInstant().atZone(ZoneId.of("Asia/Shanghai")).
                                 toLocalDate()) < 0)
                 .forEach(activities::add);
-        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem,userUtil.getLoginUser()));
+        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem, userUtil.getLoginUser()));
     }
 
     @Override
     public List<ActivityDto> findAllFinishedActivity(String type) {
         List<Activity> activities = new ArrayList<>();
         List<Activity> list = new ArrayList<>();
-        if(type.equals("competition")){
+        if (type.equals("competition")) {
             list = activityRepository.findByActivityType("competition");
-        }else{
+        } else {
             list = activityRepository.findAll();
         }
         list.stream()
@@ -117,7 +119,7 @@ public class ActivityServiceImpl implements ActivityService {
                         (activity.getActTime().toInstant().atZone(ZoneId.of("Asia/Shanghai")).
                                 toLocalDate()) > 0)
                 .forEach(activities::add);
-        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem,userUtil.getLoginUser()));
+        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem, userUtil.getLoginUser()));
 
     }
 
@@ -125,9 +127,9 @@ public class ActivityServiceImpl implements ActivityService {
     public List<ActivityDto> findAllFreshActivity(String type) {
         List<Activity> activities = new ArrayList<>();
         List<Activity> list = new ArrayList<>();
-        if(type.equals("competition")){
+        if (type.equals("competition")) {
             list = activityRepository.findByActivityType("competition");
-        }else{
+        } else {
             list = activityRepository.findAll();
         }
         list.stream()
@@ -136,13 +138,13 @@ public class ActivityServiceImpl implements ActivityService {
                         (activity.getEndTime().toInstant().atZone(ZoneId.of("Asia/Shanghai")).
                                 toLocalDate()) < 0)
                 .forEach(activities::add);
-        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem,userUtil.getLoginUser()));
+        return dtoTransferHelper.transferToListDto(activities, eachItem -> dtoTransferHelper.transferToActivityDto((Activity) eachItem, userUtil.getLoginUser()));
 
     }
 
     @Override
     public ActivityDto findActivityById(Integer activityId) {
-        return dtoTransferHelper.transferToActivityDto(activityRepository.findOne(activityId),userUtil.getLoginUser());
+        return dtoTransferHelper.transferToActivityDto(activityRepository.findOne(activityId), userUtil.getLoginUser());
     }
 
     @Override
@@ -172,8 +174,9 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
-    public List<ActivityDto> findPaginationActivityWithCriteria(Integer pageNum, Integer pageSize,
-                                                         String activityName,String type,boolean isCompetition){
+    public List<ActivityDto> findPaginationActivityWithCriteria(
+            Integer pageNum, Integer pageSize,String activityType, String activityName,
+            String type) {
         Pageable pageable = new PageRequest(pageNum, pageSize, Sort.Direction.DESC, "publishTime");
         List<ActivityDto> result = new ArrayList<>();
         Page<Activity> page = activityRepository.findAll(new Specification<Activity>() {
@@ -181,56 +184,67 @@ public class ActivityServiceImpl implements ActivityService {
             public Predicate toPredicate(Root<Activity> root,
                                          CriteriaQuery<?> query, CriteriaBuilder cb) {
                 Path<String> activityNamePath = root.get("name");
+                Path<Timestamp> endTimePath = root.get("endTime");
+                Path<Timestamp> actTimePath = root.get("actTime");
+                Path<String> activityTypePath = root.get("activityType");
                 /**
                  * 连接查询条件, 不定参数，可以连接0..N个查询条件
                  */
                 Predicate condition1 = null;
-                if(activityName==null||activityName.trim()==""){
-                    condition1=cb.like(activityNamePath, "%%");
-                }else{
-                    condition1=cb.like(activityNamePath, "%"+activityName+"%");
-                }
-                Path<Timestamp> endTimePath = root.get("endTime");
-                Path<Timestamp> actTimePath = root.get("actTime");
-                Path<String> activityTypePath = root.get("activityType");
                 Predicate condition2 = null;
                 Predicate condition3 = null;
                 Predicate condition4 = null;
+                if (activityName == null || activityName.trim() == "") {
+                    condition1 = cb.like(activityNamePath, "%%");
+                } else {
+                    condition1 = cb.like(activityNamePath, "%" + activityName + "%");
+                }
+
                 LocalDateTime currentTime = LocalDateTime.now();
+                if(type!=null)
                 switch (type) {
                     case "fresh":
-                        condition2=cb.greaterThan(endTimePath, Timestamp.valueOf(currentTime));
+                        condition2 = cb.greaterThan(endTimePath, Timestamp.valueOf(currentTime));
                         break;
                     case "expire":
-                        condition2=cb.lessThanOrEqualTo(endTimePath, Timestamp.valueOf(currentTime));
-                        condition3=cb.greaterThan(actTimePath, Timestamp.valueOf(currentTime));
+                        condition2 = cb.lessThanOrEqualTo(endTimePath, Timestamp.valueOf(currentTime));
+                        condition3 = cb.greaterThan(actTimePath, Timestamp.valueOf(currentTime));
                         break;
                     case "finish":
-                        condition2=cb.lessThanOrEqualTo(actTimePath, Timestamp.valueOf(currentTime));
+                        condition2 = cb.lessThanOrEqualTo(actTimePath, Timestamp.valueOf(currentTime));
                         break;
                     default:
                 }
-                if(isCompetition){
-                    condition4=cb.equal(activityTypePath, "competition");
-                }else{
-                    condition4=cb.like(activityTypePath, "%%");
+                if(activityType!=null)
+                switch (activityType) {
+                    case COMPETITION:
+                        condition4 = cb.equal(activityTypePath, COMPETITION);
+                        break;
+                    case COURSE:
+                        condition4 = cb.equal(activityTypePath, COURSE);
+                        break;
+                    case LAB:
+                        condition4 = cb.equal(activityTypePath, LAB);
+                        break;
+                    default:
+                        condition4 = cb.isNotNull(activityNamePath);
                 }
-                if(condition2==null)
-                query.where(condition1,condition4);
-                else if(condition3==null){
-                    query.where(condition1,condition2,condition4);
-                }else
-                    query.where(condition1,condition2,condition3,condition4);
+                if (condition2 == null)
+                    query.where(condition1, condition4);
+                else if (condition3 == null) {
+                    query.where(condition1, condition2, condition4);
+                } else
+                    query.where(condition1, condition2, condition3, condition4);
 
                 return null;
             }
 
-        },pageable);
+        }, pageable);
         List<Activity> list = page.getContent();
         User currentUser = userUtil.getLoginUser();
 
-        for(Activity ans:list){
-            result.add(dtoTransferHelper.transferToActivityDto(ans,currentUser));
+        for (Activity ans : list) {
+            result.add(dtoTransferHelper.transferToActivityDto(ans, currentUser));
         }
         return result;
     }
@@ -239,7 +253,7 @@ public class ActivityServiceImpl implements ActivityService {
     public boolean enroll(Integer userId, Integer activityId) throws WrongUsageException {
         Activity activity = findActivity(activityId);
         User user = userUtil.getUserByUserId(userId);
-        if(activity!=null) {
+        if (activity != null) {
             user.getJoinActivities().add(activity);
             userRepository.save(user);
             return true;

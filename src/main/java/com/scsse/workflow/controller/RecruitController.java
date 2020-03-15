@@ -66,7 +66,8 @@ public class RecruitController {
      * @see RecruitDto 返回详细属性见此类
      */
     @GetMapping("/recruit/all")
-    public Result getRecruitList(@RequestParam(required = false) String recruitName,
+    public Result getRecruitList(@RequestParam(required = false) String activityType,
+                                 @RequestParam(required = false) String recruitName,
                                  @RequestParam(required = false) String recruitPosition,
                                  @RequestParam(required = false, defaultValue = "0") Integer pageNum,
                                  @RequestParam(required = false, defaultValue = "10") Integer pageSize,
@@ -85,7 +86,9 @@ public class RecruitController {
 //        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, requestParam));
 
 
-        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize, null,recruitName, recruitPosition, currentTime));
+        return ResultUtil.success(recruitService.findPaginationRecruitWithCriteria(pageNum, pageSize,
+                activityType,null,
+                recruitName, recruitPosition, currentTime));
 
     }
 
@@ -115,7 +118,7 @@ public class RecruitController {
                                      ) throws WrongUsageException {
         Integer userId = userUtil.getLoginUserId();
         return ResultUtil.success(
-                recruitService.findPaginationRecruitWithCriteria(pageNum,pageSize,userId,null,null,null));
+                recruitService.findPaginationRecruitWithCriteria(pageNum,pageSize,null,userId,null,null,null));
     }
 
 

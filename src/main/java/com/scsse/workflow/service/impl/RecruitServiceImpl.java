@@ -3,15 +3,13 @@ package com.scsse.workflow.service.impl;
 import com.scsse.workflow.entity.dto.RecruitDto;
 import com.scsse.workflow.entity.dto.UserAppliedRecruit;
 import com.scsse.workflow.entity.dto.UserDto;
-import com.scsse.workflow.entity.model.Recruit;
-import com.scsse.workflow.entity.model.Tag;
-import com.scsse.workflow.entity.model.Team;
-import com.scsse.workflow.entity.model.User;
+import com.scsse.workflow.entity.model.*;
 import com.scsse.workflow.handler.WrongUsageException;
 import com.scsse.workflow.repository.RecruitRepository;
 import com.scsse.workflow.repository.TagRepository;
 import com.scsse.workflow.repository.TeamRepository;
 import com.scsse.workflow.repository.UserRepository;
+import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.service.RecruitService;
 import com.scsse.workflow.util.container.Pair;
 import com.scsse.workflow.util.dao.DtoTransferHelper;
@@ -44,6 +42,7 @@ public class RecruitServiceImpl implements RecruitService {
     private final ModelMapper modelMapper;
 
     private final DtoTransferHelper dtoTransferHelper;
+    private final ActivityService activityService;
 
     private final RecruitRepository recruitRepository;
     private final UserRepository userRepository;
@@ -51,15 +50,15 @@ public class RecruitServiceImpl implements RecruitService {
     private final TagRepository tagRepository;
 
     private final TeamRepository teamRepository;
-
     private final UserUtil userUtil;
 
 
     @Autowired
     public RecruitServiceImpl(ModelMapper modelMapper, DtoTransferHelper dtoTransferHelper,
-                              UserRepository userRepository, RecruitRepository recruitRepository, TagRepository tagRepository, TeamRepository teamRepository, UserUtil userUtil) {
+                              ActivityService activityService,UserRepository userRepository, RecruitRepository recruitRepository, TagRepository tagRepository, TeamRepository teamRepository, UserUtil userUtil) {
         this.modelMapper = modelMapper;
         this.dtoTransferHelper = dtoTransferHelper;
+        this.activityService = activityService;
         this.userRepository = userRepository;
         this.recruitRepository = recruitRepository;
         this.tagRepository = tagRepository;
@@ -80,7 +79,7 @@ public class RecruitServiceImpl implements RecruitService {
 
     @Override
     public List<RecruitDto> findPaginationRecruitWithCriteria(
-            Integer pageNum, Integer pageSize, Integer creatorId,
+            Integer pageNum, Integer pageSize, String activityType,Integer creatorId,
             String recruitName, String recruitPosition, String currentTime) {
         Pageable pageable = new PageRequest(pageNum, pageSize, Sort.Direction.DESC, "createTime");
         List<RecruitDto> result = new ArrayList<>();
@@ -92,6 +91,8 @@ public class RecruitServiceImpl implements RecruitService {
                 Path<String> recruitPositionPath = root.get("recruitPosition");
                 Path<User> creatorIdPath = root.get("creator");
                 Path<Timestamp> currentTimePath = root.get("createTime");
+                Path<String> activityPath = root.get("activity");
+
                 /**
                  * 连接查询条件, 不定参数，可以连接0..N个查询条件
                  */
@@ -119,7 +120,17 @@ public class RecruitServiceImpl implements RecruitService {
                 }else{
                     condition4 = cb.isNotNull(currentTimePath);
                 }
-                query.where(condition1, condition2,condition3,condition4);
+                Predicate condition5 = null;
+                //关联表查询示例
+                if (!StringUtils.isEmpty(activityType)) {
+                    Join<Recruit, Activity> joinActivity = root.join("activity",JoinType.LEFT);
+                    condition5 = cb.equal(joinActivity.get("activityType"), activityType);
+                }
+
+                if(condition5==null)
+                    query.where(condition1, condition2,condition3,condition4);
+                else
+                query.where(condition1, condition2,condition3,condition4,condition5);
 
 //                if (condition3 == null)
 //                    query.where(condition1, condition2,
@@ -209,7 +220,7 @@ public class RecruitServiceImpl implements RecruitService {
         Recruit recruit = recruitRepository.findOne(recruitId);
         User user = userUtil.getUserByUserId(userId);
         if (recruit != null && user != null) {
-            recruit.setRecruitRegisteredNumber(recruit.getRecruitWillingNumber() + 1);
+            recruit.setRecruitRegisteredNumber(recruit.getRecruitRegisteredNumber() + 1);
             if (recruit.getActivity() != null)
                 user.getJoinActivities().add(recruit.getActivity());
             recruit.getParticipants().add(user);

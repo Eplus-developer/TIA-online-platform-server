@@ -1,6 +1,7 @@
 package com.scsse.workflow.controller;
 
 import com.scsse.workflow.entity.model.Team;
+import com.scsse.workflow.service.ActivityService;
 import com.scsse.workflow.service.TeamService;
 import com.scsse.workflow.service.UserService;
 import com.scsse.workflow.util.dao.UserUtil;
@@ -20,14 +21,15 @@ public class TeamController {
     private final UserUtil userUtil;
 
     private final TeamService teamService;
-
+    private final ActivityService activityService;
     private final UserService userService;
 
     @Autowired
-    public TeamController(UserUtil userUtil, TeamService teamService, UserService userService) {
+    public TeamController(UserUtil userUtil, TeamService teamService, UserService userService,ActivityService activityService) {
         this.userUtil = userUtil;
         this.teamService = teamService;
         this.userService = userService;
+        this.activityService = activityService;
     }
 
     /**
@@ -84,7 +86,8 @@ public class TeamController {
     }
 
     @PostMapping("/team")
-    public Result createTeam(@RequestBody Team team) {
+    public Result createTeam(@RequestBody Team team,Integer activityId) {
+        team.setActivity(activityService.findActivity(activityId));
         return ResultUtil.success(
                 teamService.createTeam(team)
         );
