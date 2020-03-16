@@ -18,6 +18,7 @@ import java.util.Set;
 public class TeamDto {
     private Integer teamId;
     private String teamName;
+    private String teamDescription;
     private String leaderName;
     private Set<UserDto> members;
     private Integer memberNum;

@@ -24,6 +24,8 @@ public class Team {
      */
     @Column
     private String name;
+    @Column
+    private String description;
 
     @OneToOne
     @JoinColumn(name = "graph_id")
