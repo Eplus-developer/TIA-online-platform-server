@@ -329,5 +329,4 @@ public class UserController {
                 userService.findCreatedCourse(userId)
         );
     }
-
 }

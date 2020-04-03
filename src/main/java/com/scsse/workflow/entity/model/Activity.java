@@ -1,17 +1,17 @@
 package com.scsse.workflow.entity.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import lombok.*;
 
 @Data
 @ToString
@@ -60,7 +60,7 @@ public class Activity {
     private User promoter;
 
     /**
-     * 活动类型（0->比赛 1->学生课程）
+     * 活动类型（0->比赛 1->学生课程 2->实验室）
      */
     @Column(name = "activity_type")
     private String activityType;
